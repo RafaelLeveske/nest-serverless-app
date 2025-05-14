@@ -8,15 +8,33 @@ provider:
   region: us-east-1
   environment:
     NODE_ENV: production
-    ORDER_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/${aws:accountId}/process-order-bff-dev-store-order-request
+    ORDER_QUEUE_URL: !Ref OrderQueue
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+          Resource:
+            - !GetAtt OrderQueue.Arn
 
 functions:
-  processOrder:
+  handleQueueMessage:
     handler: dist/lambda.handler
     events:
       - sqs:
-          arn: arn:aws:sqs:${aws:region}:${aws:accountId}:process-order-bff-dev-store-order-request
+          arn: !GetAtt OrderQueue.Arn
           batchSize: 1
+
+resources:
+  Resources:
+    OrderQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: nest-serverless-app-process-order-queue
 
 custom:
   esbuild:
