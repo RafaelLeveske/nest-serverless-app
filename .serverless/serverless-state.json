@@ -1,0 +1,249 @@
+{
+  "service": {
+    "service": "nest-serverless-app",
+    "serviceObject": {
+      "name": "nest-serverless-app"
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "nodejs18.x",
+      "region": "us-east-1",
+      "environment": {
+        "NODE_ENV": "production",
+        "ORDER_QUEUE_URL": "https://sqs.us-east-1.amazonaws.com/805953723911/process-order-bff-dev-store-order-request"
+      },
+      "stage": "dev",
+      "versionFunctions": true,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ProcessOrderLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/nest-serverless-app-dev-processOrder"
+            }
+          },
+          "IamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": [
+                        "lambda.amazonaws.com"
+                      ]
+                    },
+                    "Action": [
+                      "sts:AssumeRole"
+                    ]
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": {
+                    "Fn::Join": [
+                      "-",
+                      [
+                        "nest-serverless-app",
+                        "dev",
+                        "lambda"
+                      ]
+                    ]
+                  },
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:CreateLogStream",
+                          "logs:CreateLogGroup",
+                          "logs:TagResource"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/nest-serverless-app-dev*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/nest-serverless-app-dev*:*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "sqs:ReceiveMessage",
+                          "sqs:DeleteMessage",
+                          "sqs:GetQueueAttributes"
+                        ],
+                        "Resource": [
+                          "arn:aws:sqs:us-east-1:805953723911:process-order-bff-dev-store-order-request"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ],
+              "Path": "/",
+              "RoleName": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    "nest-serverless-app",
+                    "dev",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    "lambdaRole"
+                  ]
+                ]
+              }
+            }
+          },
+          "ProcessOrderLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": "serverless-framework-deployments-us-east-1-1f9ba09d-0cbd",
+                "S3Key": "serverless/nest-serverless-app/dev/1747232018536-2025-05-14T14:13:38.536Z/nest-serverless-app.zip"
+              },
+              "Handler": "dist/lambda.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "nest-serverless-app-dev-processOrder",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "NODE_ENV": "production",
+                  "ORDER_QUEUE_URL": "https://sqs.us-east-1.amazonaws.com/805953723911/process-order-bff-dev-store-order-request"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "ProcessOrderLogGroup"
+            ]
+          },
+          "ProcessOrderLambdaVersionwFYag4IC5WvFqXYfTxwI77ngDq348S49qs1Uv3bDa4": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "ProcessOrderLambdaFunction"
+              },
+              "CodeSha256": "fGR5Zh5xtJIrHSqe7uv/1Ol/05VCZDlP3vrmt9a9Ql4="
+            }
+          },
+          "ProcessOrderEventSourceMappingSQSProcessorderbffdevstoreorderrequest": {
+            "Type": "AWS::Lambda::EventSourceMapping",
+            "DependsOn": [
+              "IamRoleLambdaExecution"
+            ],
+            "Properties": {
+              "BatchSize": 1,
+              "EventSourceArn": "arn:aws:sqs:us-east-1:805953723911:process-order-bff-dev-store-order-request",
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "ProcessOrderLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Enabled": true
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": "serverless-framework-deployments-us-east-1-1f9ba09d-0cbd",
+            "Export": {
+              "Name": "sls-nest-serverless-app-dev-ServerlessDeploymentBucketName"
+            }
+          },
+          "ProcessOrderLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "ProcessOrderLambdaVersionwFYag4IC5WvFqXYfTxwI77ngDq348S49qs1Uv3bDa4"
+            },
+            "Export": {
+              "Name": "sls-nest-serverless-app-dev-ProcessOrderLambdaFunctionQualifiedArn"
+            }
+          }
+        }
+      },
+      "vpc": {}
+    },
+    "custom": {
+      "esbuild": {
+        "bundle": true,
+        "minify": false,
+        "sourcemap": false,
+        "exclude": [],
+        "target": "node18",
+        "platform": "node",
+        "concurrency": 10
+      }
+    },
+    "pluginsData": {},
+    "functions": {
+      "processOrder": {
+        "handler": "dist/lambda.handler",
+        "events": [
+          {
+            "sqs": {
+              "arn": "arn:aws:sqs:us-east-1:805953723911:process-order-bff-dev-store-order-request",
+              "batchSize": 1
+            }
+          }
+        ],
+        "name": "nest-serverless-app-dev-processOrder",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "ProcessOrderLambdaVersionwFYag4IC5WvFqXYfTxwI77ngDq348S49qs1Uv3bDa4"
+      }
+    },
+    "configValidationMode": "warn",
+    "serviceFilename": "serverless",
+    "initialServerlessConfig": {
+      "service": "nest-serverless-app",
+      "frameworkVersion": "4",
+      "provider": {
+        "$ref": "$[\"service\"][\"provider\"]"
+      },
+      "functions": {
+        "$ref": "$[\"service\"][\"functions\"]"
+      },
+      "custom": {
+        "$ref": "$[\"service\"][\"custom\"]"
+      }
+    },
+    "appId": null,
+    "orgId": null,
+    "layers": {},
+    "artifact": "/home/rafaelvieira/personal_projects/nest-serverless-app/.serverless/nest-serverless-app.zip"
+  },
+  "package": {
+    "artifactDirectoryName": "serverless/nest-serverless-app/dev/1747232018536-2025-05-14T14:13:38.536Z",
+    "artifact": "nest-serverless-app.zip"
+  }
+}

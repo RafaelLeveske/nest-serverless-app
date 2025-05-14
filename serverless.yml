@@ -1,0 +1,29 @@
+service: nest-serverless-app
+
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    NODE_ENV: production
+    ORDER_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/${aws:accountId}/process-order-bff-dev-store-order-request
+
+functions:
+  processOrder:
+    handler: dist/lambda.handler
+    events:
+      - sqs:
+          arn: arn:aws:sqs:${aws:region}:${aws:accountId}:process-order-bff-dev-store-order-request
+          batchSize: 1
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: false
+    exclude: []
+    target: node18
+    platform: node
+    concurrency: 10
