@@ -14,7 +14,6 @@ This serverless approach ensures automatic scalability, cost-efficiency, and dec
 
 ```
 [BFF/API Gateway] ---> [SQS] ---> [Lambda (NestJS Consumer)]
-
 ```
 
 - **BFF/API Gateway**: Receives external HTTP requests and forwards service orders to the SQS queue.
